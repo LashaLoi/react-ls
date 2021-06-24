@@ -3,8 +3,14 @@ import React, { useCallback } from "react";
 import { useLSState } from "../react-ls";
 
 export const ExampleComponent: React.FC = () => {
-  const [count, setCount] = useLSState("count", 0);
-  const [input, setInput] = useLSState("input", "");
+  const [count, setCount, resetCount] = useLSState({
+    key: "count",
+    defaultState: 0
+  });
+  const [input, setInput] = useLSState({
+    key: "input",
+    defaultState: ""
+  });
 
   const handleSetCount = useCallback(
     () => setCount(state => state + 1),
@@ -19,6 +25,7 @@ export const ExampleComponent: React.FC = () => {
   return (
     <>
       <button onClick={handleSetCount}>{count}</button>
+      <button onClick={resetCount}>Reset count</button>
       <input value={input} onChange={handleChange} />
     </>
   );

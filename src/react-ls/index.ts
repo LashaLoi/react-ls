@@ -1,42 +1,77 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 
-type HandleState<T> = (state: T) => T;
+const DEFAULT_NAMESPACE = "react-ls";
 
-type ReturnValue<T> = [T, (value: HandleState<T>) => void];
+type Value<T> = T;
 
-// type Options = {
-//   namespace: string;
-// };
+type HandleStateValue<T> = (state: T) => T;
+type HandleState<T> = (value: HandleStateValue<T>) => void;
 
-export function useLSState<T>(
-  key: string,
-  defaultState: T
-  // options?: Options
-): ReturnValue<T> {
-  const initialState = () => {
-    const value = localStorage.getItem(key);
-    const deserializedValue = value ? JSON.parse(value) : defaultState;
+type Reset = () => void;
 
-    return deserializedValue;
-  };
+type ReturnValue<T> = [Value<T>, HandleState<T>, Reset];
 
-  const [state, setState] = useState<T>(initialState);
+type Options = {
+  namespace: string;
+};
 
-  const handleState = useCallback(
-    (value: HandleState<T>) => {
-      const parsedValue = typeof value === "function" ? value(state) : value;
+type Params<T> = { key: string; defaultState: T; options?: Options };
 
-      const serializedValue = JSON.stringify(parsedValue);
-      localStorage.setItem(key, serializedValue);
+const setupNamespace = (namespace: string) =>
+  localStorage.setItem(namespace, JSON.stringify({}));
 
-      setState(parsedValue);
-    },
-    [key, state]
+const initialState = <T>(namespace: string, key: string, defaultState: T) => {
+  const value = localStorage.getItem(namespace);
+
+  if (!value) {
+    setupNamespace(namespace);
+
+    return defaultState;
+  }
+
+  const item = JSON.parse(value)[namespace];
+
+  return (item && item[key]) ?? defaultState;
+};
+
+const updateValue = <T>(namespace: string, key: string, value: T) => {
+  const existValue = JSON.parse(localStorage.getItem(namespace)!);
+
+  const serializedValue = JSON.stringify({
+    [namespace]: {
+      ...existValue[namespace],
+      [key]: value
+    }
+  });
+
+  localStorage.setItem(namespace, serializedValue);
+};
+
+export const useLSState = <T>(params: Params<T>): ReturnValue<T> => {
+  const { key, defaultState, options } = params;
+  const namespace = useMemo(
+    () => options?.namespace || DEFAULT_NAMESPACE,
+    [options]
   );
 
-  return [state, handleState];
-}
+  const [state, setState] = useState<T>(() =>
+    initialState(namespace, key, defaultState)
+  );
 
-// export function getLSState(key) {}
+  const handleState = useCallback(
+    (value: HandleStateValue<T>) => {
+      const parsedValue = value(state);
 
-// export function setLSState(key) {}
+      updateValue(namespace, key, parsedValue);
+      setState(parsedValue);
+    },
+    [key, state, namespace]
+  );
+
+  const reset = () => {
+    updateValue(namespace, key, defaultState);
+    setState(defaultState);
+  };
+
+  return [state, handleState, reset];
+};
