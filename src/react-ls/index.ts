@@ -1,8 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
-
 import { initState, updateValue } from "./helpers";
 import { DEFAULT_NAMESPACE } from "./constants";
-import { HandleStateValue, ReturnValue, Params } from "./types";
+import { SetStateValue, ReturnValue, Params } from "./types";
 
 export function useLSState<T>(params: Params<T>): ReturnValue<T> {
   const { key, defaultState, options } = params;
@@ -15,20 +14,27 @@ export function useLSState<T>(params: Params<T>): ReturnValue<T> {
     initState(namespace, key, defaultState)
   );
 
-  const handleState = useCallback(
-    (cb: HandleStateValue<T>) => {
-      const parsedValue = cb(state);
-
-      updateValue(namespace, key, parsedValue);
-      setState(parsedValue);
+  const handleUpdate = useCallback(
+    (value: T) => {
+      updateValue(namespace, key, value);
+      setState(value);
     },
-    [key, state, namespace]
+    [key, namespace]
   );
 
-  const reset = useCallback(() => {
-    updateValue(namespace, key, defaultState);
-    setState(defaultState);
-  }, [defaultState, key, namespace]);
+  const handleState = useCallback(
+    (fn: SetStateValue<T>) => {
+      const newState = fn(state);
+
+      handleUpdate(newState);
+    },
+    [handleUpdate, state]
+  );
+
+  const reset = useCallback(
+    () => handleUpdate(defaultState),
+    [handleUpdate, defaultState]
+  );
 
   return [state, handleState, reset];
 }

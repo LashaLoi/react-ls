@@ -1,11 +1,11 @@
-export type Value<T> = T;
+export type State<T> = T;
 
-export type HandleStateValue<T> = (state: T) => T;
-export type HandleState<T> = (value: HandleStateValue<T>) => void;
+export type SetStateValue<T> = (state: T) => T;
+export type SetState<T> = (value: SetStateValue<T>) => void;
 
-export type Reset = () => void;
+export type ResetState = () => void;
 
-export type ReturnValue<T> = [Value<T>, HandleState<T>, Reset];
+export type ReturnValue<T> = [State<T>, SetState<T>, ResetState];
 
 export type Options = {
   namespace: string;

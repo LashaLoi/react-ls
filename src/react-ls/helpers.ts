@@ -1,20 +1,20 @@
 const setupNamespace = (namespace: string) =>
-  localStorage.setItem(namespace, JSON.stringify({}));
+  localStorage.setItem(namespace, "");
 
 export const initState = <T>(
   namespace: string,
   key: string,
   defaultState: T
 ) => {
-  const value = localStorage.getItem(namespace);
+  const lsState = localStorage.getItem(namespace);
 
-  if (!value) {
+  if (!lsState) {
     setupNamespace(namespace);
 
     return defaultState;
   }
 
-  const item = JSON.parse(value)[namespace];
+  const item = JSON.parse(lsState)[namespace];
 
   return (item && item[key]) ?? defaultState;
 };
