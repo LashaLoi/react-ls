@@ -1,12 +1,12 @@
 import { useState, useCallback, useMemo } from "react";
 import { initState, updateValue } from "./helpers";
 import { DEFAULT_NAMESPACE } from "./constants";
-import { SetStateValue, ReturnValue, Params } from "./types";
+import { SetState, ResetState, ReturnValue, Params } from "./types";
 
 export function useLSState<T>(params: Params<T>): ReturnValue<T> {
   const { key, defaultState, options } = params;
   const namespace = useMemo(
-    () => options?.namespace || DEFAULT_NAMESPACE,
+    () => options?.namespace ?? DEFAULT_NAMESPACE,
     [options]
   );
 
@@ -14,16 +14,16 @@ export function useLSState<T>(params: Params<T>): ReturnValue<T> {
     initState(namespace, key, defaultState)
   );
 
-  const handleUpdate = useCallback(
-    (value: T) => {
+  const handleUpdate = useCallback<(value: T) => void>(
+    value => {
       updateValue(namespace, key, value);
       setState(value);
     },
     [key, namespace]
   );
 
-  const handleState = useCallback(
-    (fn: SetStateValue<T>) => {
+  const handleState = useCallback<SetState<T>>(
+    fn => {
       const newState = fn(state);
 
       handleUpdate(newState);
@@ -31,7 +31,7 @@ export function useLSState<T>(params: Params<T>): ReturnValue<T> {
     [handleUpdate, state]
   );
 
-  const reset = useCallback(
+  const reset = useCallback<ResetState>(
     () => handleUpdate(defaultState),
     [handleUpdate, defaultState]
   );
