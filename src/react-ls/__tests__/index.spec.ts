@@ -1,4 +1,4 @@
-import { renderHook, act } from "@testing-library/react-hooks";
+import { renderHook } from "@testing-library/react-hooks";
 
 import { useLSState } from "../";
 import { DEFAULT_NAMESPACE } from "../constants";
@@ -13,7 +13,6 @@ describe("useLSState", () => {
 
   it("should return default value on initial render", () => {
     // Arrange
-    const stringifyDefaultValue = "{}";
     const params = {
       key: "count",
       defaultState: 0
@@ -26,11 +25,6 @@ describe("useLSState", () => {
     const [count] = result.current;
 
     expect(count).toBe(params.defaultState);
-    expect(localStorage.setItem).toHaveBeenCalledTimes(1);
-    expect(localStorage.setItem).toHaveBeenCalledWith(
-      DEFAULT_NAMESPACE,
-      stringifyDefaultValue
-    );
   });
 
   it("should call getItem on initial render", () => {
